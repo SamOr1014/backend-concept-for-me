@@ -9,7 +9,7 @@ class LoadBalancer:
         self.port = port
         self.servers = servers or []
         self.lb_server_socket = None
-        self.algorithum_instance = Algo(self.servers)
+        self.algorithm_instance = Algo(self.servers)
         self.algorithm = algorithm
 
 
@@ -48,21 +48,19 @@ class LoadBalancer:
                 client_socket.close()
                 return
 
-            # use algo to select next be server
-            
-            
+            # use algo to select next be serverß
             match self.algorithm:
                 case "round_robin":
-                    backend_host, backend_port = self.algorithum_instance.round_robin()
+                    backend_host, backend_port = self.algorithm_instance.round_robin()
                 case "least_connections":
-                    backend_host, backend_port = self.algorithum_instance.select_least_connections()
+                    backend_host, backend_port = self.algorithm_instance.select_least_connections()
                 case _:
-                    backend_host, backend_port = self.algorithum_instance.round_robin()  # Default to round-robin for now
+                    backend_host, backend_port = self.algorithm_instance.round_robin()  # Default to round-robin for now
             
             #  Direct the request to the next backend server using algo
             backend_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             backend_socket.connect((backend_host, backend_port))
-            self.algorithum_instance.increment_count(self.servers.index((backend_host, backend_port)))  # Increment connection count for least connections
+            self.algorithm_instance.increment_count(self.servers.index((backend_host, backend_port)))  # Increment connection count for least connections
             backend_socket.sendall(request)
             
             response = b""
@@ -73,7 +71,7 @@ class LoadBalancer:
                 response += chunk
                 
             backend_socket.close()
-            self.algorithum_instance.decrement_count(self.servers.index((backend_host, backend_port)))  # Decrement connection count for least connections
+            self.algorithm_instance.decrement_count(self.servers.index((backend_host, backend_port)))  # Decrement connection count for least connections
             
             print(f"Print load balancer received response from backend and sending back to client, res from backend {backend_host}:{backend_port}")
             # Send the response back to the client
